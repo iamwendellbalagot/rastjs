@@ -3,7 +3,7 @@ import {render, createElement} from './Raku'
 import Welcome from './src/app';
 const App = () => {
     return (
-        <div>
+        <div style='margin:0'>
             <Welcome />
         </div>
     )
