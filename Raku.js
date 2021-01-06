@@ -83,17 +83,27 @@ const commitWork = (fiber) => {
   if (!fiber) {
     return;
   }
-  const domParent = fiber.parent.dom;
+  let domParentFiber = fiber.parent;
+  while(!domParentFiber.dom) {
+    domParentFiber = domParentFiber.parent
+  }
+  const domParent = domParentFiber.dom;
   if (fiber.effectTag === "CREATE" && fiber.dom != null) {
     domParent.appendChild(fiber.dom);
   } else if (fiber.effectTag === "UPDATE" && fiber.dom != null) {
     updateDOM(fiber.dom, fiber.alternate.props, fiber.props);
   } else if (fiber.effectTag === "DESTROY") {
-    domParent.removeChild(fiber.dom);
+    commitDelete(fiber, domParent)
   }
   commitWork(fiber.child);
   commitWork(fiber.sibling);
 };
+
+const commitDelete = (fiber, domParent) => {
+  (fiber.dom) && domParent.removeChild(fiber.dom);
+  (!fiber.dom) && (commitDelete(fiber.child, domParent));
+
+}
 
 const render = (element, container) => {
   wipRoot = {
@@ -125,12 +135,13 @@ const workLoadLoop = (deadline) => {
 requestIdleCallback(workLoadLoop);
 
 const performWorkLoad = (fiber) => {
-  if (!fiber.dom) {
-    fiber.dom = createDOM(fiber);
+  const isFuncComponent = fiber.type instanceof Function;
+  if(isFuncComponent){
+    updateFuncCOmponent(fiber)
+  }else {
+    updateHostComponent(fiber)
   }
 
-  const elements = fiber.props.children;
-  reconcileChildren(fiber, elements);
   if (fiber.child) {
     return fiber.child;
   }
@@ -142,6 +153,38 @@ const performWorkLoad = (fiber) => {
     nextFiber = nextFiber.parent;
   }
 };
+
+let wipFiber = null;
+let hookIndex = null;
+
+const updateFuncCOmponent =(fiber) => {
+  wipFiber = fiber;
+  hookIndex = 0;
+  wipFiber.hooks = [];
+  const children = [fiber.type(fiber.props)]
+  reconcileChildren(fiber, children)
+}
+
+const useState = (initialState) => {
+  const oldHook = (wipFiber.alternate && wipFiber.alternate.hooks)
+    && wipFiber.alternate.hooks[hookIndex];
+  const hook = {
+    state: oldHook ? oldHook.state : initialState
+  };
+  wipFiber.hooks.push(hook);
+  hookIndex++;
+  return [hook.state]
+}
+
+const updateHostComponent = (fiber) => {
+  if (!fiber.dom) {
+    fiber.dom = createDOM(fiber);
+  }
+
+  const elements = fiber.props.children;
+  reconcileChildren(fiber, elements);
+}
+
 const reconcileChildren = (wipFiber, elements) => {
   let index = 0;
   let oldFiber = wipFiber.alternate && wipFiber.alternate.child;
@@ -198,18 +241,9 @@ const Raku = { createElement, render };
 
 const container = document.getElementById("root");
 
-const updateValue = (e) => {
-  rerender(e.target.value);
-};
 
-const rerender = (value) => {
-  const element = (
-    <div>
-      <input onInput={updateValue} value={value} />
-      <h2>Hello {value}</h2>
-    </div>
-  );
-  Raku.render(element, container);
-};
-
-rerender("World");
+function App({name}) {
+  return <h1>Hi {name}</h1>
+}
+const element = <App name="wendell" />
+Raku.render(element, container)
