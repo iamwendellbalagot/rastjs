@@ -32,23 +32,44 @@ const createDOM = (fiber) => {
   return node;
 }
 
+const commitRoot = () => {
+  //Commit the node into the dom
+  commitWork(wipRoot.child)
+  rootRef = wipRoot;
+  wipRoot = null;
+  console.log('Commiting The nodes')
+}
+
+const commitWork = (fiber) => {
+  if(!fiber) return;
+  const domParent = fiber.parent.dom;
+  domParent.appendChild(fiber.dom);
+  commitWork(fiber.child);
+  commitWork(fiber.sibling);
+}
+
 const render = (element, container) => {
-  nextWorkLoad = {
+  wipRoot = {
     dom: container,
     props: {
       children: [element]
-    }
-  }
+    },
+    alternate: rootRef
+  };
+  nextWorkLoad = wipRoot;
 }
 
 let nextWorkLoad = null;
+let rootRef = null;
+let wipRoot = null;
 const workLoadLoop = (deadline) => {
   let yieldStatus = false;
   while(nextWorkLoad && !yieldStatus){
     nextWorkLoad = performWorkLoad(nextWorkLoad)
     yieldStatus = deadline.timeRemaining() < 1;
-    console.log('Next LOAD: ',nextWorkLoad)
+    console.log('Next LOAD: ',yieldStatus,nextWorkLoad)
   }
+  (!nextWorkLoad && wipRoot) && commitRoot();
   requestIdleCallback(workLoadLoop)
 }
 
@@ -56,7 +77,6 @@ requestIdleCallback(workLoadLoop)
 
 const performWorkLoad = (fiber) => {
   !fiber.dom && (fiber.dom = createDOM(fiber));
-  fiber.parent && (fiber.parent.dom.appendChild(fiber.dom));
 
   const elements = fiber.props.children;
   let index = 0;
@@ -88,7 +108,8 @@ const container = document.getElementById('root');
 
 let el = <div id='test' >
   <h1>Welcome</h1>
-  <div>Hello World</div>
+  <div>Hello Worldd</div>
+  <input />
 </div>
 
 render(el, container)
