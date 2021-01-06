@@ -1,30 +1,32 @@
-const createElement = (type, props, ...args) => {
-    const children = args.length? [].concat(...args) : null
-    return {
-        type, props, children
-    }
-}
+const createElement = (type, props, ...children) => (
+  {type, props: {...props, children: children.map( child =>
+    typeof child !== 'object'? createTextElement(child) : child  
+  )}}
+);
+
+const createTextElement = (text) => (
+  {
+    type: 'plainText',
+    props: {nodeValue: text, children:[]}
+  }
+);
 
 const render = (element, container) => {
-  let node;
-  if(typeof(element) !== 'object'){
-    node = document.createTextNode(element) 
-  }else{
-    node = document.createElement(element.type)
-    let attr = element.props || {};
-    Object.keys(attr).map(k => node.setAttribute(k, attr[k]));
-    (element.children || []).forEach(child => render(child, node))
-  }
-  container.appendChild(node)
-  console.log(element)
+  const node = element.type === 'plainText' ? document.createTextNode('')
+    : document.createElement(element.type)
+  Object.keys(element.props ).filter(key => key !== 'children')
+    .map(c => node[c] = element.props[c])
+  element.props.children.map(child => render(child, node))
+  container.appendChild(node);
 }
 
 /** @jsx createElement */
 
-const element = (
-    <div id='sumo'>
-        <p id='col' style='color: red'>Welcome to Raku</p>
-    </div>
-);
+const container = document.getElementById('root');
 
-render(element, document.getElementById('root'))
+let el = <div id='test' >
+  <h1>Welcome</h1>
+  <div>Hello World</div>
+</div>
+
+render(el, container)
