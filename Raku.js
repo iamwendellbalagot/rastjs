@@ -84,8 +84,8 @@ const commitWork = (fiber) => {
     return;
   }
   let domParentFiber = fiber.parent;
-  while(!domParentFiber.dom) {
-    domParentFiber = domParentFiber.parent
+  while (!domParentFiber.dom) {
+    domParentFiber = domParentFiber.parent;
   }
   const domParent = domParentFiber.dom;
   if (fiber.effectTag === "CREATE" && fiber.dom != null) {
@@ -93,17 +93,16 @@ const commitWork = (fiber) => {
   } else if (fiber.effectTag === "UPDATE" && fiber.dom != null) {
     updateDOM(fiber.dom, fiber.alternate.props, fiber.props);
   } else if (fiber.effectTag === "DESTROY") {
-    commitDelete(fiber, domParent)
+    commitDelete(fiber, domParent);
   }
   commitWork(fiber.child);
   commitWork(fiber.sibling);
 };
 
 const commitDelete = (fiber, domParent) => {
-  (fiber.dom) && domParent.removeChild(fiber.dom);
-  (!fiber.dom) && (commitDelete(fiber.child, domParent));
-
-}
+  fiber.dom && domParent.removeChild(fiber.dom);
+  !fiber.dom && commitDelete(fiber.child, domParent);
+};
 
 const render = (element, container) => {
   wipRoot = {
@@ -136,10 +135,10 @@ requestIdleCallback(workLoadLoop);
 
 const performWorkLoad = (fiber) => {
   const isFuncComponent = fiber.type instanceof Function;
-  if(isFuncComponent){
-    updateFuncCOmponent(fiber)
-  }else {
-    updateHostComponent(fiber)
+  if (isFuncComponent) {
+    updateFuncCOmponent(fiber);
+  } else {
+    updateHostComponent(fiber);
   }
 
   if (fiber.child) {
@@ -157,24 +156,44 @@ const performWorkLoad = (fiber) => {
 let wipFiber = null;
 let hookIndex = null;
 
-const updateFuncCOmponent =(fiber) => {
+const updateFuncCOmponent = (fiber) => {
   wipFiber = fiber;
   hookIndex = 0;
   wipFiber.hooks = [];
-  const children = [fiber.type(fiber.props)]
-  reconcileChildren(fiber, children)
-}
+  const children = [fiber.type(fiber.props)];
+  reconcileChildren(fiber, children);
+};
 
 const useState = (initialState) => {
-  const oldHook = (wipFiber.alternate && wipFiber.alternate.hooks)
-    && wipFiber.alternate.hooks[hookIndex];
+  const oldHook =
+    wipFiber.alternate &&
+    wipFiber.alternate.hooks &&
+    wipFiber.alternate.hooks[hookIndex];
   const hook = {
-    state: oldHook ? oldHook.state : initialState
+    state: oldHook ? oldHook.state : initialState,
+    queue: []
   };
+
+  const actions = oldHook ? oldHook.queue : [];
+  actions.forEach((action) => {
+    hook.state = action;
+  });
+
+  const setState = (action) => {
+    hook.queue.push(action);
+    wipRoot = {
+      dom: rootRef.dom,
+      props: rootRef.props,
+      alternate: rootRef
+    };
+    nextWorkLoad = wipRoot;
+    deletes = [];
+  };
+
   wipFiber.hooks.push(hook);
   hookIndex++;
-  return [hook.state]
-}
+  return [hook.state, setState];
+};
 
 const updateHostComponent = (fiber) => {
   if (!fiber.dom) {
@@ -183,7 +202,7 @@ const updateHostComponent = (fiber) => {
 
   const elements = fiber.props.children;
   reconcileChildren(fiber, elements);
-}
+};
 
 const reconcileChildren = (wipFiber, elements) => {
   let index = 0;
@@ -206,16 +225,16 @@ const reconcileChildren = (wipFiber, elements) => {
       };
     }
 
-    (!sameType && element) && (
-      newFiber = {
+    !sameType &&
+      element &&
+      (newFiber = {
         type: element.type,
         props: element.props,
         dom: null,
         alternate: null,
         parent: wipFiber,
         effectTag: "CREATE"
-      }
-    );
+      });
 
     if (!sameType && oldFiber) {
       oldFiber.effectTag = "DESTROY";
@@ -223,7 +242,7 @@ const reconcileChildren = (wipFiber, elements) => {
     }
 
     if (oldFiber) {
-      oldFiber = oldFiber.sibling
+      oldFiber = oldFiber.sibling;
     }
 
     if (index === 0) {
@@ -236,14 +255,21 @@ const reconcileChildren = (wipFiber, elements) => {
   }
 };
 
-const Raku = { createElement, render };
+const Raku = { createElement, render, useState };
 /** @jsx Raku.createElement */
 
 const container = document.getElementById("root");
 
-
-function App({name}) {
-  return <h1>Hi {name}</h1>
+function App() {
+  const [num, setNum] = Raku.useState(0);
+  // const handleSun = () => {
+  //   setNum(num + 1)
+  // }
+  return (
+    <div>
+      <h1 onClick={() => setNum(num + 1)}>{`Counter: ${num}`}</h1>
+    </div>
+  );
 }
-const element = <App name="wendell" />
-Raku.render(element, container)
+const element = <App />;
+Raku.render(element, container);
