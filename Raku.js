@@ -1,13 +1,3 @@
-// const render = (element, container) => {
-//   const node = element.type === 'plainText' ? document.createTextNode('')
-//     : document.createElement(element.type)
-//   Object.keys(element.props ).filter(key => key !== 'children')
-//     .map(c => node[c] = element.props[c])
-//   element.props.children.map(child => render(child, node))
-//   container.appendChild(node);
-//   console.log(element)
-// }
-
 const createElement = (type, props, ...children) => ({
   type,
   props: {
@@ -255,21 +245,5 @@ const reconcileChildren = (wipFiber, elements) => {
   }
 };
 
-const Raku = { createElement, render, useState };
-/** @jsx Raku.createElement */
-
-const container = document.getElementById("root");
-
-function App() {
-  const [num, setNum] = Raku.useState(0);
-  // const handleSun = () => {
-  //   setNum(num + 1)
-  // }
-  return (
-    <div>
-      <h1 onClick={() => setNum(num + 1)}>{`Counter: ${num}`}</h1>
-    </div>
-  );
-}
-const element = <App />;
-Raku.render(element, container);
+ export  { createElement, render, useState };
+/** @jsx createElement */
