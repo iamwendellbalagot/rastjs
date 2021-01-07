@@ -1,4 +1,5 @@
-const createElement = (type, props, ...children) => ({
+const createElement = (type, props, ...children) => {
+  return {
   type,
   props: {
     ...props,
@@ -9,7 +10,7 @@ const createElement = (type, props, ...children) => ({
       } : child
     )
   }
-});
+}};
 
 const createDOM = (fiber) => {
   const node =
@@ -21,7 +22,7 @@ const createDOM = (fiber) => {
 };
 
 //filtering methods
-const isEvent = (key) => key.startsWith("on");
+const isEvent = (key) => key.startsWith("event");
 const isProp = (key) => key !== "children" && !isEvent(key);
 const destroyProps = (prev, next) => (key) => !(key in next);
 const newProps = (prev, next) => (key) => prev[key] !== next[key];
@@ -31,7 +32,7 @@ const updateDOM = (dom, prevProps, nextProps) => {
     .filter(isEvent)
     .filter((key) => !(key in nextProps) || newProps(prevProps, nextProps)(key))
     .forEach((ev) => {
-      const eventType = ev.toLowerCase().substring(2);
+      const eventType = ev.toLowerCase().substring(5);
       dom.removeEventListener(eventType, prevProps[ev]);
     });
   //remove props
@@ -53,7 +54,7 @@ const updateDOM = (dom, prevProps, nextProps) => {
     .filter(isEvent)
     .filter(newProps(prevProps, nextProps))
     .forEach((ev) => {
-      const eventType = ev.toLowerCase().substring(2);
+      const eventType = ev.toLowerCase().substring(5);
       dom.addEventListener(eventType, nextProps[ev]);
     });
 };
@@ -114,7 +115,7 @@ requestIdleCallback(workLoadLoop);
 
 const performWorkLoad = (fiber) => {
   const isFuncComponent = fiber.type instanceof Function;
-  (isFuncComponent) && updateFuncCOmponent(fiber);
+  (isFuncComponent) && updateFuncComponent(fiber);
   (!isFuncComponent) && updateHostComponent(fiber);
   if (fiber.child) return fiber.child;
   let nextFiber = fiber;
@@ -127,7 +128,7 @@ const performWorkLoad = (fiber) => {
 let wipFiber = null;
 let hookIndex = null;
 
-const updateFuncCOmponent = (fiber) => {
+const updateFuncComponent = (fiber) => {
   wipFiber = fiber;
   hookIndex = 0;
   wipFiber.hooks = [];
@@ -168,7 +169,8 @@ const useState = (initialState) => {
 
 const updateHostComponent = (fiber) => {
   (!fiber.dom) && (fiber.dom = createDOM(fiber));
-  const elements = fiber.props.children;
+  const elements = fiber.props.children.flat();
+  console.log('ELEM: ', elements)
   reconcileChildren(fiber, elements);
 };
 
@@ -203,10 +205,11 @@ const reconcileChildren = (wipFiber, elements) => {
       oldFiber.effectTag = "DESTROY";
       deletes.push(oldFiber);
     }
+    console.log('OLD: ', oldFiber, typeof(oldFiber));
     (oldFiber) && (oldFiber = oldFiber.sibling);
     if (index === 0) {
       wipFiber.child = newFiber;
-    } else if (element) {
+    } else if (element && prevSibling) {
       prevSibling.sibling = newFiber;
     }
     prevSibling = newFiber;

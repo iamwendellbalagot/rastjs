@@ -15,26 +15,29 @@ const style =
     `
 function App() {
     const [input, setInput] = useState('');
-    const [logs, setLogs] = useState([]);
-    // const handleSun = () => {
-    //   setNum(num + 1)
-    // }
+    const [logs, setLogs] = useState(['wendel', 'jim', 'als']);
+    const [show, setShow] = useState(false);
 
     const handleInput = (e) => {
-        console.log(input)
+        e.preventDefault();
+        input && setLogs([...logs, input])
+        setShow(!show)
     }
+
+    const ar = ['wendel', 'jim', 'als'];
+
     return (
       <div style={style}>
         <h1>Raku</h1>
-        <div style='display: flex;'>
+        <form style='display: flex;' eventSubmit={handleInput}>
             <input 
                 placeholder='Enter a text..'
                 value={input}
-                onInput={(e) => setInput(e.target.value)}
+                eventInput={(e) => setInput(e.target.value)}
             />
-            <button onClick={handleInput}>Add</button>
-        </div>
-        
+            <button type='submit'>Add</button>
+        </form>
+        {logs.map(a => (<p>{a}</p>))}
       </div>
     );
 }
