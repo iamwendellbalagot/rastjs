@@ -47,7 +47,14 @@ const updateDOM = (dom, prevProps, nextProps) => {
     .filter(isProp)
     .filter(newProps(prevProps, nextProps))
     .forEach((prop) => {
-      dom[prop] = nextProps[prop];
+      if (prop === 'style') { // update style
+        transformDomStyle(dom, nextProps.style)
+      } else if (prop === 'className') { // update className
+        prevProps.className && dom.classList.remove(...prevProps.className.split(/\s+/))
+        dom.classList.add(...nextProps.className.split(/\s+/))
+      } else {
+        dom[prop] = nextProps[prop]
+      }
     });
   //addevent
   Object.keys(nextProps)
@@ -58,6 +65,21 @@ const updateDOM = (dom, prevProps, nextProps) => {
       dom.addEventListener(eventType, nextProps[ev]);
     });
 };
+
+const reg = /[A-Z]/g
+function transformDomStyle(dom, style) {
+  dom.style = Object.keys(style)
+    .reduce((acc, styleName) => {
+      const key = styleName.replace(
+        reg, 
+        function(v) { 
+          return '-' + v.toLowerCase() 
+        }
+      )
+      acc += `${key}: ${style[styleName]};`
+      return acc
+    }, '')
+}
 
 const commitRoot = () => {
   deletes.forEach(commitWork);
