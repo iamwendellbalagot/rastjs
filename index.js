@@ -1,4 +1,4 @@
-import {render, createElement} from './Raku'
+import {renderDOM, createElement} from './Raku'
 /** @jsx createElement */
 import Welcome from './src/app';
 const App = () => {
@@ -11,4 +11,4 @@ const App = () => {
 
 const element = <App />;
 const container = document.getElementById("root");
-render(element, container);
+renderDOM(element, container);

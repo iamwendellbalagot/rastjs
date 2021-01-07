@@ -1,4 +1,4 @@
-import {useState, createElement} from '../Raku';
+import {initializeValue, createElement} from '../Raku';
 /** @jsx createElement */
 
 const style = 
@@ -13,14 +13,27 @@ const style =
         align-items: center;
         justify-content: center;
     `
+const nodes = 
+    `
+        border: 1px solid lightgreen;
+        padding-top: 10px;
+        width: 300px;
+        text-align: center;
+        border-radius: 3px;
+    `
 function App() {
-    const input = useState('');
-    const logs = useState(['wendel', 'jim', 'als']);
+    const input = initializeValue('');
+    const logs = initializeValue(['wendel', 'jim', 'als']);
 
     const handleInput = (e) => {
         e.preventDefault();
         input.value && logs.setValue([...logs.value, input.value])
         input.setValue('')
+    }
+
+    const handleDelete = (idx) => { 
+        const newLogs = [...logs.value].filter(val => val !== logs.value[idx])
+        logs.setValue(newLogs)
     }
 
 
@@ -35,7 +48,9 @@ function App() {
             />
             <button type='submit'>Add</button>
         </form>
-        {logs.value.map(a => (<p>{a}</p>))}
+        {logs.value.map((a,idx) => (
+            <p style={nodes} eventClick={() => handleDelete(idx)}>{a}</p>
+        ))}
       </div>
     );
 }

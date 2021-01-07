@@ -75,7 +75,7 @@ const commitWork = (fiber) => {
   const domParent = domParentFiber.dom;
   (fiber.effectTag === "CREATE" && fiber.dom != null) && domParent.appendChild(fiber.dom);
   (fiber.effectTag === "UPDATE" && fiber.dom != null) && updateDOM(fiber.dom, fiber.alternate.props, fiber.props);
-  (fiber.effectTag === "DESTROY") && commitDelete(fiber, domParent);
+  if(fiber.effectTag === "DESTROY") {commitDelete(fiber, domParent); return};
   commitWork(fiber.child);
   commitWork(fiber.sibling);
 };
@@ -85,7 +85,7 @@ const commitDelete = (fiber, domParent) => {
   !fiber.dom && commitDelete(fiber.child, domParent);
 };
 
-const render = (element, container) => {
+const renderDOM = (element, container) => {
   wipRoot = {
     dom: container,
     props: {
@@ -136,7 +136,7 @@ const updateFuncComponent = (fiber) => {
   reconcileChildren(fiber, children);
 };
 
-const useState = (initialState) => {
+const initializeValue = (initialState) => {
   const oldHook =
     wipFiber.alternate &&
     wipFiber.alternate.hooks &&
@@ -220,5 +220,5 @@ const reconcileChildren = (wipFiber, elements) => {
   }
 };
 
- export  { createElement, render, useState };
+ export  { createElement, renderDOM, initializeValue };
 /** @jsx createElement */
