@@ -164,7 +164,10 @@ const useState = (initialState) => {
 
   wipFiber.hooks.push(hook);
   hookIndex++;
-  return [hook.state, setState];
+  return {
+    value: hook.state,
+    setValue: setState
+  };
 };
 
 const updateHostComponent = (fiber) => {
