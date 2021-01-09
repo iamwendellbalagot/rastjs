@@ -11,27 +11,11 @@ JavaScript front-end library that supports concurrent mode
 ### Installation
 
 ``` js
-npm install -g rastjs-app
+npm install rastjs
 ```
-* **Note**: When you generate a *rasp-app*, rastjs core library is already installed. it also includes webpack and babel (Like create-react-app).<br/>
 
-Here is the link to core library repository: https://github.com/iamwendellbalagot/rastjs <br/>
-
-
-  * To create a RastJS app, on your terminal use: 
- ``` js
- rast-app your-app-name
- ```
-   * To start the development server: 
- ``` js
- npm start
- ```
- 
-   * Bundling rasp-app:
-   * Note: css and sass loaders are already installed, you can also use custom loaders by modifying the webpack.config.js
- ``` js
- npm run build
- ```
+ * Link to CLI repo that generates rastJS app boilerplate.<br/>
+https://github.com/iamwendellbalagot/rast-app
  
 ### Usage
 ``` js
@@ -50,6 +34,14 @@ export default App;
 
 ```
   * **Note**: you need to add *//** @jsx DOMnode*/ to every .js files that uses JSX to transpile it (see the example above).
+### Known Issue
+When you use ternary operators or (map/forEach) to render JSX elements, you need to put a div element as a wrapper.
+``` jsx
+//Example 1
+<div>{myState.value? <p>Hello, World</p> : null}</div>
+//Example 2
+<div>{mystate.value.map(item => (<p>{item}</p>))}</div>
+```
 ### initializeValue Hook
 Like react, you can also declare a state in your application using RastJS.
 
@@ -153,4 +145,3 @@ import yourImage from '../assets/your-image.png';
 
 ## License
 This repo is under the MIT license.
-
